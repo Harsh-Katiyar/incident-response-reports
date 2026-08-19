@@ -1,0 +1,97 @@
+name: Update Incident Reports Feed
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "reports/**/incident.json"
+      - ".github/workflows/update-reports.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate reports.json
+        run: |
+          python <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          reports = []
+
+          for path in sorted(Path("reports").glob("*/incident.json")):
+              try:
+                  with path.open("r", encoding="utf-8") as f:
+                      data = json.load(f)
+
+                  if data.get("published") is not True:
+                      continue
+
+                  case_folder = path.parent.name
+
+                  report = {
+                      "id": data.get("id"),
+                      "case": data.get("case"),
+                      "title": data.get("title"),
+                      "category": data.get("category"),
+                      "severity": data.get("severity"),
+                      "status": data.get("status"),
+                      "environment": data.get("environment"),
+                      "date": data.get("date"),
+                      "description": data.get("description"),
+                      "tools": data.get("tools", []),
+                      "mitre": data.get("mitre", []),
+                      "tags": data.get("tags", []),
+                      "caseUrl": f"https://github.com/${{ github.repository }}/tree/main/reports/{case_folder}",
+                      "reportUrl": f"https://github.com/${{ github.repository }}/tree/main/reports/{case_folder}/report"
+                  }
+
+                  reports.append(report)
+
+              except Exception as e:
+                  print(f"Skipping {path}: {e}")
+
+          reports.sort(
+              key=lambda x: (
+                  x.get("date") or "",
+                  x.get("id") or ""
+              ),
+              reverse=True
+          )
+
+          output = {
+              "generated": datetime.now(timezone.utc).isoformat(),
+              "count": len(reports),
+              "reports": reports
+          }
+
+          with open("reports.json", "w", encoding="utf-8") as f:
+              json.dump(output, f, indent=2, ensure_ascii=False)
+
+          print(f"Generated reports.json with {len(reports)} published report(s).")
+          PY
+
+      - name: Commit updated feed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add reports.json
+
+          if git diff --cached --quiet; then
+            echo "No reports.json changes detected."
+            exit 0
+          fi
+
+          git commit -m "Update incident reports feed [skip ci]"
+          git push
