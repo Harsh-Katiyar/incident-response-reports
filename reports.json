@@ -1,0 +1,35 @@
+{
+  "generated": "2026-08-19T12:43:11.803169+00:00",
+  "count": 1,
+  "reports": [
+    {
+      "id": "IR-001",
+      "case": "CASE-001",
+      "title": "Brute-Force Authentication Incident",
+      "category": "Credential Access",
+      "severity": "High",
+      "status": "Completed",
+      "environment": "Simulated SOC Lab",
+      "date": "2026-08-19",
+      "description": "Investigation of repeated authentication failures generated within a controlled SOC lab to simulate a brute-force authentication attack.",
+      "tools": [
+        "Splunk",
+        "Windows Event Logs",
+        "Sysmon",
+        "Active Directory"
+      ],
+      "mitre": [
+        "T1110 - Brute Force"
+      ],
+      "tags": [
+        "brute-force",
+        "authentication",
+        "soc",
+        "incident-response",
+        "credential-access"
+      ],
+      "caseUrl": "https://github.com/Harsh-Katiyar/incident-response-reports/tree/main/reports/CASE-001-brute-force",
+      "reportUrl": "https://github.com/Harsh-Katiyar/incident-response-reports/tree/main/reports/CASE-001-brute-force/report"
+    }
+  ]
+}
